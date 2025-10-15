@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debezium-connect
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: debezium-connect
+  template:
+    metadata:
+      labels:
+        app: debezium-connect
+    spec:
+      containers:
+        - name: connect
+          image: debezium/connect:2.7.3.Final
+          env:
+            - name: BOOTSTRAP_SERVERS
+              value: "kafka-svc.kafka.svc.cluster.local:9094"
+            - name: GROUP_ID
+              value: "debezium-connect-cluster"
+            - name: CONFIG_STORAGE_TOPIC
+              value: "debezium_connect_configs"
+            - name: OFFSET_STORAGE_TOPIC
+              value: "debezium_connect_offsets"
+            - name: STATUS_STORAGE_TOPIC
+              value: "debezium_connect_statuses"
+            # Replication factors for single broker
+            - name: CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            # Converters
+            - name: KEY_CONVERTER
+              value: "org.apache.kafka.connect.json.JsonConverter"
+            - name: VALUE_CONVERTER
+              value: "org.apache.kafka.connect.json.JsonConverter"
+            - name: KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            - name: VALUE_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            # Internal converters
+            - name: INTERNAL_KEY_CONVERTER
+              value: "org.apache.kafka.connect.json.JsonConverter"
+            - name: INTERNAL_VALUE_CONVERTER
+              value: "org.apache.kafka.connect.json.JsonConverter"
+            - name: INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            - name: INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE
+              value: "false"
+            # Kafka connection settings
+            - name: CONNECT_SESSION_TIMEOUT_MS
+              value: "30000"
+            - name: CONNECT_HEARTBEAT_INTERVAL_MS
+              value: "10000"
+            - name: CONNECT_MAX_POLL_INTERVAL_MS
+              value: "300000"
+            # REST API settings
+            - name: CONNECT_REST_ADVERTISED_HOST_NAME
+              value: "debezium-connect"
+            - name: CONNECT_REST_PORT
+              value: "8083"
+            # JVM settings
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms512M -Xmx1G"
+            - name: KAFKA_JVM_PERFORMANCE_OPTS
+              value: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35"
+          ports:
+            - containerPort: 8083
+              name: http
+          resources:
+            limits:
+              memory: "1.5Gi"
+              cpu: "1000m"
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
