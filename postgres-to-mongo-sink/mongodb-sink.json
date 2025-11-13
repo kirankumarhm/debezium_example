@@ -1,0 +1,20 @@
+{
+  "name": "mongodb-sink",
+  "config": {
+    "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+    "topics": "postgres.public.customers,postgres.public.orders,postgres.public.products",
+    "connection.uri": "mongodb://mongodb:27017",
+    "database": "inventory",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+	  "document.id.strategy": "com.mongodb.kafka.connect.sink.processor.id.strategy.FullKeyStrategy",
+	  "delete.on.null.values": "true",
+	  "max.num.retries": "3",
+	  "retries.defer.timeout": "5000",
+    "topic.override.postgres.public.customers.collection": "customers",
+    "topic.override.postgres.public.orders.collection": "orders",
+    "topic.override.postgres.public.products.collection": "products"
+  }
+}
