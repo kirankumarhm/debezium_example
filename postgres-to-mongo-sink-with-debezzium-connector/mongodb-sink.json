@@ -1,0 +1,21 @@
+{
+    "name": "mongodb-sink",
+    "config": {
+        "connector.class": "io.debezium.connector.mongodb.MongoDbSinkConnector",
+        "tasks.max": "1",
+        "topics": "postgres.public.customers,postgres.public.orders,postgres.public.products",
+        "mongodb.connection.string": "mongodb://mongodb:27017/?replicaSet=rs0",
+        "sink.database": "inventory",
+        "change.data.capture.handler": "io.debezium.connector.mongodb.sink.changestream.handler.MongoDbCdcHandler",
+        "delete.enabled": "true",
+        "delete.on.null.values": "true",
+        "collection.name.format": "${source.table}",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": "true",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+        "errors.tolerance": "all",
+        "errors.log.enable": "true",
+        "errors.log.include.messages": "true"
+    }
+}
